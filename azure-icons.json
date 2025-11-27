@@ -1,0 +1,13 @@
+{
+    "prefix": "azure",
+    "icons": {
+        "batch-ai": { 
+            "body": "<path fill=\"currentColor\" d=\"./azure-icons/00028-icon-service-Batch-AI.svg\"/>",
+            "width": 24,
+            "height": 24
+        },
+        "MLStudio": { 
+            "body": "<path fill=\"currentColor\" d=\"./azure-icons/00030-icon-service-Machine-Learning-Studio-(Classic)-Web-Services.svg\"/>" 
+        }
+    }
+}

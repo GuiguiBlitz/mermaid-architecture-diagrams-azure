@@ -1,0 +1,25 @@
+{
+  "name": "mermaid-architecture-diagrams-azure",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+      "dev": "vite",
+      "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GuiguiBlitz/mermaid-architecture-diagrams-azure.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GuiguiBlitz/mermaid-architecture-diagrams-azure/issues"
+  },
+  "homepage": "https://github.com/GuiguiBlitz/mermaid-architecture-diagrams-azure#readme",
+  "dependencies": {
+    "mermaid": "^11.12.1",
+    "vite": "^7.2.4"
+  }
+}
