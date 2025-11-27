@@ -1,53 +1,74 @@
 import mermaid from 'mermaid';
-import customIconData from './azure-icons.json';
+import customIconData from './azure-icons.json'; 
 
-// 1. Initialize Mermaid (startOnLoad: false for API control)
+// 🎯 UPDATED IMPORTS: logic is cleaner now
+import { basicSetup, EditorView } from "codemirror";
+import { EditorState } from "@codemirror/state"; // Sometimes still needed explicitly for state creation
+import { oneDark } from "@codemirror/theme-one-dark";
+
+// --- MERMAID SETUP ---
 mermaid.initialize({
     startOnLoad: false,
-    securityLevel: 'loose' // Recommended for enabling links/interactivity
+    securityLevel: 'loose' 
 });
 
-// 2. Register the Custom Icon Pack
 mermaid.registerIconPacks([
     {
-        name: customIconData.prefix, // 'myco' from the JSON file
-        loader: () => customIconData, // Directly return the imported JSON object
+        name: customIconData.prefix, 
+        loader: () => customIconData,
     },
 ]);
 
-// 3. Define the Diagram using the custom prefix
-const graphDefinition = `
+const initialMermaidText = `
 architecture-beta
     group api(cloud)[API]
 
-    service db(azure:batch-ai)[Database] in api
+    service db(azure:databases-azure-database-postgresql-server)[Database] in api
     service disk1(disk)[Storage] in api
     service disk2(disk)[Storage] in api
-    service server(azure:batch-ai)[Server] in api
+    service server(azure:databases-azure-database-postgresql-server)[Server] in api
 
     db:L -- R:server
     disk1:T -- B:server
-    disk2:T -- B:db
-`;
+    disk2:T -- B:db`;
 
-// 4. Render the Diagram
-async function renderDiagram() {
+// --- RENDER FUNCTION ---
+async function renderDiagram(graphDefinition) {
     const container = document.getElementById('diagram-container');
-    const diagramId = 'custom-diagram';
-    
+    container.innerHTML = ''; 
+
     try {
-        const { svg, bindFunctions } = await mermaid.render(diagramId, graphDefinition);
-        
+        const { svg, bindFunctions } = await mermaid.render('live-diagram', graphDefinition);
         container.innerHTML = svg;
-        
-        // Bind events if needed (e.g., click handlers)
-        if (bindFunctions) {
-            bindFunctions(container);
-        }
+        if (bindFunctions) bindFunctions(container);
     } catch (error) {
-        console.error('Mermaid rendering failed:', error);
-        container.innerHTML = `<pre>Error rendering diagram: ${error.message}</pre>`;
+        container.innerHTML = `<pre style="color: red;">Error: ${error.message}</pre>`;
     }
 }
 
-renderDiagram();
+// --- CODEMIRROR SETUP ---
+
+const updateListener = EditorView.updateListener.of((update) => {
+    if (update.docChanged) {
+        renderDiagram(update.state.doc.toString());
+    }
+});
+
+const startState = EditorState.create({
+    doc: initialMermaidText,
+    extensions: [
+        basicSetup, // Includes line numbers, bracket matching, etc.
+        oneDark,    // The dark theme
+        updateListener,
+        EditorView.lineWrapping // Optional: wraps long lines
+    ]
+});
+
+// Mount the editor
+const editor = new EditorView({
+    state: startState,
+    parent: document.getElementById('code-editor')
+});
+
+// Initial Render
+renderDiagram(initialMermaidText);

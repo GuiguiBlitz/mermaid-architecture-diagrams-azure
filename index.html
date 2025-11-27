@@ -2,11 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Mermaid Custom Icon Test</title>
+    <title>Mermaid Custom Icon Live Editor</title>
+    <style>
+        body { display: flex; font-family: sans-serif; margin: 0; height: 100vh; }
+        
+        #editor-container { 
+            width: 40%; 
+            padding: 20px; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #diagram-output { 
+            width: 60%; 
+            padding: 20px; 
+            border-left: 1px solid #ccc; 
+            overflow: auto; /* Scroll if diagram is huge */
+        }
+
+        /* The container for our editor */
+        #code-editor { 
+            flex-grow: 1; /* Fill remaining vertical space */
+            border: 1px solid #ccc; 
+            overflow: hidden; /* Let CodeMirror handle scrolling */
+        }
+        
+        /* 🎯 CRITICAL CSS FOR CODEMIRROR 6 🎯 */
+        /* This ensures the editor actually takes up height */
+        .cm-editor {
+            height: 100%;
+        }
+        
+        #diagram-container svg { max-width: 100%; height: auto; }
+    </style>
 </head>
 <body>
-    <h1>Custom Icon Diagram Test</h1>
-    <div id="diagram-container"></div>
+    <div id="editor-container">
+        <h2>Mermaid Input</h2>
+        <div id="code-editor"></div> 
+    </div>
+    
+    <div id="diagram-output">
+        <h2>Diagram Output</h2>
+        <div id="diagram-container"></div>
+    </div>
+    
     <script type="module" src="./main.js"></script>
 </body>
 </html>
