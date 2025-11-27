@@ -123,7 +123,27 @@
             border-left: 1px solid #ccc;
         }
         #diagram-container svg { max-width: 100%; height: auto; }
+        .search-wrapper {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            background: #252526;
+        }
 
+        #icon-search {
+            width: 100%;
+            padding: 8px;
+            background-color: #3c3c3c;
+            border: 1px solid #555;
+            color: #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't overflow width */
+            font-size: 13px;
+        }
+        
+        #icon-search:focus {
+            outline: none;
+            border-color: #007acc;
+        }
     </style>
 </head>
 <body>
@@ -132,6 +152,9 @@
         <div class="sidebar-header">
             <span>Library</span>
             <button id="close-sidebar" style="background:none;border:none;color:#999;cursor:pointer;">✕</button>
+        </div>
+        <div class="search-wrapper">
+            <input type="text" id="icon-search" placeholder="Search icons...">
         </div>
         <div id="icon-list">
             </div>

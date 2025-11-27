@@ -139,19 +139,57 @@ function setupSidebarInteractions() {
     if(toggleBtn) toggleBtn.addEventListener('click', toggle);
     if(closeBtn) closeBtn.addEventListener('click', toggle);
 }
+function setupSearch() {
+    const searchInput = document.getElementById('icon-search');
+    const listContainer = document.getElementById('icon-list');
 
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        
+        // Get all category groups
+        // Structure is: Header -> Grid -> Icons
+        const headers = listContainer.querySelectorAll('.category-header');
+        const grids = listContainer.querySelectorAll('.category-grid');
+
+        grids.forEach((grid, index) => {
+            const icons = grid.querySelectorAll('.icon-item');
+            let hasVisibleIcons = false;
+
+            icons.forEach(icon => {
+                // Get the text inside the icon-name div
+                const name = icon.querySelector('.icon-name').innerText.toLowerCase();
+                
+                if (name.includes(term)) {
+                    icon.style.display = 'flex'; // Show match
+                    hasVisibleIcons = true;
+                } else {
+                    icon.style.display = 'none'; // Hide mismatch
+                }
+            });
+
+            // Toggle the Category Header based on if it has any visible children
+            const header = headers[index];
+            if (hasVisibleIcons) {
+                grid.style.display = 'grid';
+                header.style.display = 'block';
+            } else {
+                grid.style.display = 'none';
+                header.style.display = 'none';
+            }
+        });
+    });
+}
 // --- 4. EDITOR SETUP ---
 const initialText = `architecture-beta
-    group api(cloud)[API]
+    group api(azure-general-resource-groups)[rgarchi]
 
     service db(azure:databases-azure-database-postgresql-server)[Database] in api
-    service disk1(disk)[Storage] in api
-    service disk2(disk)[Storage] in api
-    service server(azure:databases-azure-database-postgresql-server)[Server] in api
-
-    db:L -- R:server
-    disk1:T -- B:server
-    disk2:T -- B:db`;
+    service disk1(azure-integration-api-management-services)[Storage] in api
+    service fa(azure-compute-function-apps)[Storage] in api
+    
+    db:L -- R:fa
+    disk1:T -- B:fa
+`;
 
 const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged) {
@@ -177,5 +215,6 @@ const editor = new EditorView({
 
 // --- 5. INITIAL EXECUTION ---
 loadIconsToSidebar();
+setupSearch();
 setupSidebarInteractions();
 renderDiagram(initialText);
