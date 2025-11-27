@@ -2,175 +2,172 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Mermaid Custom Icon Live Editor</title>
+    <title>Mermaid Azure Architecture Editor</title>
     <style>
-        /* MAIN LAYOUT: 3 Columns (Sidebar | Editor | Output) */
+        /* --- GLOBAL LAYOUT --- */
         body { 
             display: flex; 
+            flex-direction: column; /* Stack Main Layout and Footer vertically */
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
             height: 100vh; 
             overflow: hidden; 
-            background: #1e1e1e; /* Dark theme background */
+            background: #1e1e1e;
+            color: #ccc;
         }
-        
-        /* --- 1. SIDEBAR (The Icons) --- */
+
+        /* Wrapper for the Editor workspace (Sidebar + Code + Preview) */
+        #main-layout {
+            display: flex;
+            flex: 1; /* Take all remaining height */
+            overflow: hidden; /* Prevent scrolling on the body */
+            position: relative;
+        }
+
+        /* --- 1. SIDEBAR --- */
         #icon-sidebar {
-            width: 0; /* Hidden by default */
+            width: 0;
             background: #252526; 
             border-right: 1px solid #333;
-            overflow: hidden; /* Hide content when width is 0 */
             transition: width 0.3s ease;
-            display: flex; 
-            flex-direction: column;
-            flex-shrink: 0; /* Prevent shrinking when window is small */
+            display: flex; flex-direction: column; flex-shrink: 0;
         }
         
-        #icon-sidebar.open {
-            width: 300px; /* Open width */
-        }
+        #icon-sidebar.open { width: 300px; }
 
         .sidebar-header {
             padding: 10px 15px;
             background: #333;
-            color: #ccc;
             font-weight: bold;
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             white-space: nowrap;
         }
 
-        #icon-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 10px;
+        /* Search Bar */
+        .search-wrapper { padding: 10px; border-bottom: 1px solid #333; background: #252526; }
+        #icon-search {
+            width: 100%; padding: 6px; background: #3c3c3c; border: 1px solid #555;
+            color: #ccc; border-radius: 4px; box-sizing: border-box;
         }
+        #icon-search:focus { outline: none; border-color: #007acc; }
 
-        /* Group Headers */
+        /* Icon List */
+        #icon-list { flex-grow: 1; overflow-y: auto; padding: 10px; }
         .category-header {
-            color: #4daafc; /* Azure blueish */
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 15px 0 5px 5px;
-            border-bottom: 1px solid #3e3e42;
-            padding-bottom: 2px;
+            color: #4daafc; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+            margin: 15px 0 5px 5px; border-bottom: 1px solid #3e3e42; padding-bottom: 2px;
         }
-
-        /* Grid for icons */
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 icons per row */
-            gap: 8px;
-        }
+        .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
         .icon-item {
-            background: #333;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: center;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            justify-content: center;
-            min-height: 60px;
+            background: #333; padding: 8px; border-radius: 4px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 60px; position: relative;
         }
         .icon-item:hover { background: #444; }
         .icon-item svg { width: 24px; height: 24px; fill: #ccc; margin-bottom: 5px; }
-        .icon-name { font-size: 9px; color: #aaa; word-break: break-all; line-height: 1.1; }
+        .icon-name { font-size: 9px; color: #aaa; word-break: break-all; line-height: 1.1; text-align: center; }
 
-        /* --- 2. EDITOR (Middle) --- */
+        /* --- 2. EDITOR --- */
         #editor-container { 
-            flex-grow: 1; /* Takes remaining space */
-            display: flex; 
-            flex-direction: column; 
-            min-width: 0; /* Crucial for flex nested scrolling */
+            flex: 4; /* 40% width approx */
+            display: flex; flex-direction: column; 
+            border-right: 1px solid #333;
+            min-width: 0;
         }
         
-        /* Header bar for editor */
         .toolbar {
-            height: 40px;
-            background: #2d2d2d;
-            border-bottom: 1px solid #3e3e42;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
+            height: 35px; background: #2d2d2d; border-bottom: 1px solid #3e3e42;
+            display: flex; align-items: center; padding: 0 10px;
         }
-
         #toggle-btn {
-            background: #007acc;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 2px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-right: 10px;
+            background: #007acc; color: white; border: none; padding: 4px 10px;
+            border-radius: 2px; cursor: pointer; font-size: 12px; margin-right: 10px;
         }
         #toggle-btn:hover { background: #0062a3; }
 
-        #code-editor { flex-grow: 1; overflow: hidden; position: relative; }
+        #code-editor { flex-grow: 1; overflow: hidden; }
         .cm-editor { height: 100%; }
 
-        /* --- 3. OUTPUT (Right) --- */
+        /* --- 3. OUTPUT --- */
         #diagram-output { 
-            width: 50%; 
-            background: #fff; /* Light background for diagram contrast */
+            flex: 6; /* 60% width approx */
+            background: #fff; /* White background for diagram */
             padding: 20px; 
             overflow: auto; 
-            border-left: 1px solid #ccc;
+            display: flex; flex-direction: column;
         }
         #diagram-container svg { max-width: 100%; height: auto; }
-        .search-wrapper {
-            padding: 10px;
-            border-bottom: 1px solid #333;
-            background: #252526;
+
+        /* --- 4. BOTTOM BAR (FOOTER) --- */
+        footer {
+            height: 30px;
+            background: #007acc; /* Azure Blue Footer */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            gap: 20px;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
-        #icon-search {
-            width: 100%;
-            padding: 8px;
-            background-color: #3c3c3c;
-            border: 1px solid #555;
-            color: #ccc;
-            border-radius: 4px;
-            box-sizing: border-box; /* Ensures padding doesn't overflow width */
-            font-size: 13px;
+        footer a {
+            color: white;
+            text-decoration: none;
+            display: flex; align-items: center; gap: 5px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
         }
+        footer a:hover { opacity: 1; text-decoration: underline; }
         
-        #icon-search:focus {
-            outline: none;
-            border-color: #007acc;
-        }
+        /* Small separator dot */
+        footer span.separator { opacity: 0.5; }
+
     </style>
 </head>
 <body>
 
-    <div id="icon-sidebar">
-        <div class="sidebar-header">
-            <span>Library</span>
-            <button id="close-sidebar" style="background:none;border:none;color:#999;cursor:pointer;">✕</button>
-        </div>
-        <div class="search-wrapper">
-            <input type="text" id="icon-search" placeholder="Search icons...">
-        </div>
-        <div id="icon-list">
+    <div id="main-layout">
+        
+        <div id="icon-sidebar">
+            <div class="sidebar-header">
+                <span>Library</span>
+                <button id="close-sidebar" style="background:none;border:none;color:#999;cursor:pointer;">✕</button>
             </div>
+            <div class="search-wrapper">
+                <input type="text" id="icon-search" placeholder="Search icons...">
+            </div>
+            <div id="icon-list"></div>
+        </div>
+
+        <div id="editor-container">
+            <div class="toolbar">
+                <button id="toggle-btn">📂 Icons</button>
+                <span style="color: #888; font-size: 12px;">Live Editor</span>
+            </div>
+            <div id="code-editor"></div> 
+        </div>
+        
+        <div id="diagram-output">
+            <div id="diagram-container"></div>
+        </div>
     </div>
 
-    <div id="editor-container">
-        <div class="toolbar">
-            <button id="toggle-btn">📂 Toggle Icons</button>
-            <span style="color: #ccc; font-size: 14px;">main.js</span>
-        </div>
-        <div id="code-editor"></div> 
-    </div>
-    
-    <div id="diagram-output">
-        <div id="diagram-container"></div>
-    </div>
+    <footer>
+        <a href="https://github.com/GuiguiBlitz/mermaid-architecture-diagrams-azure" target="_blank">
+            <span>📦</span> GitHub Repo
+        </a>
+        <span class="separator">•</span>
+        <a href="https://mermaid.js.org/syntax/architecture.html" target="_blank">
+            <span>🧜‍♀️</span> Mermaid Architecture
+        </a>
+        <span class="separator">•</span>
+        <a href="https://learn.microsoft.com/en-us/azure/architecture/icons/" target="_blank">
+            <span>☁️</span> Azure Icons
+        </a>
+    </footer>
     
     <script type="module" src="./main.js"></script>
 </body>

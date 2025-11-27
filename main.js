@@ -181,14 +181,17 @@ function setupSearch() {
 }
 // --- 4. EDITOR SETUP ---
 const initialText = `architecture-beta
-    group api(azure-general-resource-groups)[rgarchi]
+    group api(azure-general-resource-groups)[rg archi]
 
     service db(azure:databases-azure-database-postgresql-server)[Database] in api
-    service disk1(azure-integration-api-management-services)[Storage] in api
-    service fa(azure-compute-function-apps)[Storage] in api
+    service apim(azure-integration-api-management-services)[APIM] in api
+    service fa(azure-compute-function-apps)[Function App] in api
+    service usr(azure-identity-users)[User]
     
     db:L -- R:fa
-    disk1:T -- B:fa
+    apim:T -- B:fa
+    usr:T -- B:apim
+
 `;
 
 const updateListener = EditorView.updateListener.of((update) => {
