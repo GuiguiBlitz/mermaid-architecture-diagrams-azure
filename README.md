@@ -1,0 +1,1 @@
+# mermaid-architecture-diagrams-azure
