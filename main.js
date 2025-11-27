@@ -1,12 +1,10 @@
 import mermaid from 'mermaid';
-import customIconData from './azure-icons.json'; 
-
-// 🎯 UPDATED IMPORTS: logic is cleaner now
+import customIconData from './custom-azure-icons.json'; 
 import { basicSetup, EditorView } from "codemirror";
-import { EditorState } from "@codemirror/state"; // Sometimes still needed explicitly for state creation
+import { EditorState } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 
-// --- MERMAID SETUP ---
+// --- 1. MERMAID CONFIG ---
 mermaid.initialize({
     startOnLoad: false,
     securityLevel: 'loose' 
@@ -19,8 +17,131 @@ mermaid.registerIconPacks([
     },
 ]);
 
-const initialMermaidText = `
-architecture-beta
+// --- 2. RENDER FUNCTION ---
+async function renderDiagram(graphDefinition) {
+    const container = document.getElementById('diagram-container');
+    // Save the scroll position if needed, or just clear
+    container.innerHTML = ''; 
+
+    try {
+        // We use a unique ID 'live-diagram' for the graph
+        const { svg, bindFunctions } = await mermaid.render('live-diagram', graphDefinition);
+        container.innerHTML = svg;
+        
+        // If there are interaction functions (clicks, tooltips), bind them
+        if (bindFunctions) {
+            bindFunctions(container);
+        }
+    } catch (error) {
+        // Render error nicely in the view
+        container.innerHTML = `
+            <div style="color: #ff5555; font-family: monospace; padding: 20px;">
+                <strong>Render Error:</strong><br>
+                ${error.message}
+            </div>
+        `;
+        console.error('Mermaid rendering failed:', error);
+    }
+}
+
+// --- 3. SIDEBAR LOGIC ---
+function loadIconsToSidebar() {
+    const listContainer = document.getElementById('icon-list');
+    const prefix = customIconData.prefix;
+    
+    // Group Icons by Category (the part before the first hyphen)
+    const groups = {};
+
+    Object.keys(customIconData.icons).forEach(key => {
+        // logic: 'analytics-batch-ai' -> category: 'analytics', name: 'batch-ai'
+        const parts = key.split('-');
+        let category = 'General';
+        let displayName = key;
+
+        if (parts.length > 1) {
+            category = parts[0]; 
+            displayName = parts.slice(1).join('-'); 
+        }
+
+        if (!groups[category]) {
+            groups[category] = [];
+        }
+
+        groups[category].push({
+            fullKey: key,
+            displayName: displayName,
+            data: customIconData.icons[key]
+        });
+    });
+
+    // Render Groups
+    const sortedCategories = Object.keys(groups).sort();
+
+    sortedCategories.forEach(category => {
+        // Create Header
+        const header = document.createElement('div');
+        header.className = 'category-header';
+        header.innerText = category;
+        listContainer.appendChild(header);
+
+        // Create Grid
+        const grid = document.createElement('div');
+        grid.className = 'category-grid';
+
+        // Add icons
+        groups[category].forEach(icon => {
+            const iconCode = `${prefix}-${icon.fullKey}`;
+            
+            const item = document.createElement('div');
+            item.className = 'icon-item';
+            item.title = `Click to copy: ${iconCode}`;
+
+            const width = icon.data.width || 24;
+            const height = icon.data.height || 24;
+            
+            item.innerHTML = `
+                <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+                    ${icon.data.body}
+                </svg>
+                <div class="icon-name">${icon.displayName}</div>
+            `;
+
+            // Click interaction
+            item.addEventListener('click', () => {
+                navigator.clipboard.writeText(iconCode);
+                const nameEl = item.querySelector('.icon-name');
+                const originalText = nameEl.innerText;
+                const originalColor = nameEl.style.color;
+                
+                nameEl.innerText = "Copied!";
+                nameEl.style.color = "#4daafc";
+                
+                setTimeout(() => {
+                    nameEl.innerText = originalText;
+                    nameEl.style.color = originalColor || "#aaa";
+                }, 1000);
+            });
+
+            grid.appendChild(item);
+        });
+
+        listContainer.appendChild(grid);
+    });
+}
+
+function setupSidebarInteractions() {
+    const sidebar = document.getElementById('icon-sidebar');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const closeBtn = document.getElementById('close-sidebar');
+
+    const toggle = () => sidebar.classList.toggle('open');
+
+    if(toggleBtn) toggleBtn.addEventListener('click', toggle);
+    if(closeBtn) closeBtn.addEventListener('click', toggle);
+}
+
+// --- 4. EDITOR SETUP ---
+const initialText = `architecture-beta
     group api(cloud)[API]
 
     service db(azure:databases-azure-database-postgresql-server)[Database] in api
@@ -32,22 +153,6 @@ architecture-beta
     disk1:T -- B:server
     disk2:T -- B:db`;
 
-// --- RENDER FUNCTION ---
-async function renderDiagram(graphDefinition) {
-    const container = document.getElementById('diagram-container');
-    container.innerHTML = ''; 
-
-    try {
-        const { svg, bindFunctions } = await mermaid.render('live-diagram', graphDefinition);
-        container.innerHTML = svg;
-        if (bindFunctions) bindFunctions(container);
-    } catch (error) {
-        container.innerHTML = `<pre style="color: red;">Error: ${error.message}</pre>`;
-    }
-}
-
-// --- CODEMIRROR SETUP ---
-
 const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged) {
         renderDiagram(update.state.doc.toString());
@@ -55,20 +160,22 @@ const updateListener = EditorView.updateListener.of((update) => {
 });
 
 const startState = EditorState.create({
-    doc: initialMermaidText,
-    extensions: [
-        basicSetup, // Includes line numbers, bracket matching, etc.
-        oneDark,    // The dark theme
-        updateListener,
-        EditorView.lineWrapping // Optional: wraps long lines
+    doc: initialText,
+    extensions: [ 
+        basicSetup, 
+        oneDark, 
+        updateListener, 
+        EditorView.lineWrapping 
     ]
 });
 
-// Mount the editor
+// Mount CodeMirror
 const editor = new EditorView({
     state: startState,
     parent: document.getElementById('code-editor')
 });
 
-// Initial Render
-renderDiagram(initialMermaidText);
+// --- 5. INITIAL EXECUTION ---
+loadIconsToSidebar();
+setupSidebarInteractions();
+renderDiagram(initialText);
